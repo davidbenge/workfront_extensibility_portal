@@ -1,0 +1,12 @@
+{
+  "name": "portal example",
+  "id": "portal-example",
+  "description": "a main menu portal demo experience ",
+  "version": "0.0.1",
+  "mainMenuItems": [
+    {
+      "label": "My Work View",
+      "id": "my-work-view"
+    }
+  ]
+}
