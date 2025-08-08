@@ -9,7 +9,7 @@ import AIPoweredActionsWidget from '../widgets/AIPoweredActionsWidget';
 const MyWorkView = () => {
     return (
         <div className="app">
-          {/* Header */}
+          {/* Header 
           <header className="header">
             <div className="header-content">
               <div className="header-left">
@@ -43,7 +43,7 @@ const MyWorkView = () => {
               </div>
             </div>
           </header>
-    
+          */}
           {/* Main Content */}
           <main className="main-content">
             <div className="content-wrapper">
