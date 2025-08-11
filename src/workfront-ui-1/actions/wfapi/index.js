@@ -2,11 +2,9 @@
 * Josh Hardman First Try, don't laugh
 */
 
-
 const { Core } = require('@adobe/aio-sdk')
 const { errorResponse, getBearerToken, stringParameters, checkMissingRequestInputs } = require('../utils/utils')
 const { WorkfrontServiceClient } = require('../utils/wfClient.js')
-
 
 // main function that will be executed by Adobe I/O Runtime
 async function main (params) {
@@ -20,10 +18,9 @@ async function main (params) {
 
     // log parameters, only if params.LOG_LEVEL === 'debug'
     //logger.debug(stringParameters(params))
-
     
     // check for missing request input parameters and headers
-    const requiredParams = []
+    const requiredParams = ['requestObj']
     const requiredHeaders = ['Authorization']
     const errorMessage = checkMissingRequestInputs(params, requiredParams, requiredHeaders)
     if (errorMessage) {
@@ -33,31 +30,14 @@ async function main (params) {
 
     // extract the user Bearer token from the Authorization header
     const token = getBearerToken(params);
+    const url = `https://${params.requestObj.hostname}/attask/api/v20.0`;
 
-    const wfClient = new WorkfrontServiceClient(token);
-    let res = null;
-    if(params.apiCall === "get") {
-      res = await wfClient.get(params.obj, params.queryParams);
-    }
-    if(params.apiCall === "query") {
-      res = await wfClient.query(params.obj, params.queryParams);
-    }
-    if(params.apiCall === "put") {
-      res = await wfClient.put(params.obj, params.queryParams);
-    }
-    if(params.apiCall === "search") {
-      res = await wfClient.search(params.objCode, params.filters, params.queryParams);
-    }
+    const wfClient = new WorkfrontServiceClient(url, token);
 
-    if(params.requestObj) {
-      res = await wfClient.request(params.requestObj);
-    }
-
-
-
+    res = await wfClient.request(params.requestObj);
 
     //const res = await wfClient.query(params.obj, params.queryParams);
-    console.log('Workfront Approvals:', res);
+    console.log('Workfront Data:', res);
 
     const response = {
       statusCode: 200,

@@ -8,6 +8,7 @@ import { attach } from "@adobe/uix-guest";
 
 const PendingApprovalsWidget = () => {
   const [accessToken, setAccessToken] = useState('');
+  const [hostname, sethostname] = useState('');
   useEffect(() => {
     const doAttach = async () => {
       try {
@@ -17,6 +18,10 @@ const PendingApprovalsWidget = () => {
         if (imsToken) {
           authTokenManager.initialize(imsToken);
           setAccessToken(imsToken);
+        }
+        const hostname = conn?.sharedContext?.get("hostname");
+        if(hostname) {
+          sethostname(hostname);
         }
 
       } catch (e) {
@@ -35,6 +40,7 @@ const PendingApprovalsWidget = () => {
       const myApprovals = await axiosInstance.post(actionUrl,
         {
             'requestObj': {
+              'hostname': hostname,
               'method': 'get',
               'objCode': 'APPROVAL',
               'parameters': {
@@ -61,6 +67,7 @@ const PendingApprovalsWidget = () => {
           const awaitingApprovals = await axiosInstance.post(actionUrl,
             {
               'requestObj': {
+                'hostname': hostname,
                 'method': 'get',
                 'objCode': item.objCode,
                 'ID': item.ID,
@@ -77,6 +84,7 @@ const PendingApprovalsWidget = () => {
           const approvalSubmittedBy = await axiosInstance.post(actionUrl,
             {
               'requestObj': {
+                'hostname': hostname,
                 'method': 'get',
                 'objCode': 'USER',
                 'ID': awaitingApprovals.data.awaitingApprovals[0].submittedByID,
@@ -112,7 +120,7 @@ const PendingApprovalsWidget = () => {
       setApprovals(processedApprovals);
     };
     fetchData();
-  }, [accessToken]);
+  }, [accessToken, hostname]);
   //console.log(`My IMS Token: ${accessToken}`);
 
   const handleDecision = async (objID,objCode,decision) => {
@@ -122,6 +130,7 @@ const PendingApprovalsWidget = () => {
     const res = await axiosInstance.post(actionUrl,
       {
         'requestObj': {
+          'hostname': hostname,
           'method': 'put',
           'objCode': objCode,
           'ID': objID,
