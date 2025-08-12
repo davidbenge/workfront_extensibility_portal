@@ -9,6 +9,7 @@ import { attach } from "@adobe/uix-guest";
 const PendingApprovalsWidget = () => {
   const [accessToken, setAccessToken] = useState('');
   const [hostname, sethostname] = useState('');
+  const [approvals, setApprovals] = useState([]);
   useEffect(() => {
     const doAttach = async () => {
       try {
@@ -30,7 +31,7 @@ const PendingApprovalsWidget = () => {
     };
     doAttach();
   }, []);
-  const [approvals, setApprovals] = useState([]);
+  
   useEffect(() => {
     if (!accessToken) return; // Only run if accessToken is set
     // You can now use accessToken here
@@ -120,7 +121,7 @@ const PendingApprovalsWidget = () => {
       setApprovals(processedApprovals);
     };
     fetchData();
-  }, [accessToken, hostname]);
+  }, [accessToken, hostname, approvals]);
   //console.log(`My IMS Token: ${accessToken}`);
 
   const handleDecision = async (objID,objCode,decision) => {
