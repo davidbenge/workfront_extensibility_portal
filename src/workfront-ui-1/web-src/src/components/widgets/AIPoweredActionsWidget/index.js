@@ -12,7 +12,8 @@ const AIPoweredActionsWidget = () => {
       id: 2,
       icon: '➕',
       title: 'New Campaign',
-      description: 'Launch campaign'
+      description: 'Launch campaign',
+      target: 'https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/intake/6881659013dde2ca3c6db8f8/request'
     },
     {
       id: 3,
@@ -28,6 +29,13 @@ const AIPoweredActionsWidget = () => {
     }
   ];
 
+  const actionLink = async (target) => {
+    if(target) {
+      window.open(target, "_blank");
+      //window.top.location.href = target;
+    }
+  }
+
   return (
     <div className="widget-card">
       <div className="widget-header">
@@ -38,7 +46,7 @@ const AIPoweredActionsWidget = () => {
 
       <div className="ai-actions-grid">
         {actions.map((action) => (
-          <div key={action.id} className="ai-action-card">
+          <div key={action.id} className="ai-action-card" onClick={() => actionLink(action.target)}>
             <div className="ai-action-icon">{action.icon}</div>
             <div className="ai-action-title">{action.title}</div>
             <div className="ai-action-desc">{action.description}</div>

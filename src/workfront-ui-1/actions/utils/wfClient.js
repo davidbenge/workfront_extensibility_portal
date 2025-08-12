@@ -3,10 +3,10 @@ const axios = require("axios");
 
 class WorkfrontServiceClient {
   
-  constructor(url, imsToken) {
+  constructor(baseURL, imsToken) {
     //this.logger = Core.Logger('main', { level: envParams.LOG_LEVEL || 'info' })
     this.axiosInstance = axios.create({
-      baseURL: url,
+      baseURL: baseURL,
       headers: {'Authorization': `Bearer ${imsToken}`}
     });
   }

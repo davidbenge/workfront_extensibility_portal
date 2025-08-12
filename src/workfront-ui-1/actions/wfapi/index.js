@@ -30,9 +30,9 @@ async function main (params) {
 
     // extract the user Bearer token from the Authorization header
     const token = getBearerToken(params);
-    const url = `https://${params.requestObj.hostname}/attask/api/v20.0`;
+    const baseURL = `https://${params.requestObj.hostname}/attask/api/v20.0`;
 
-    const wfClient = new WorkfrontServiceClient(url, token);
+    const wfClient = new WorkfrontServiceClient(baseURL, token);
 
     res = await wfClient.request(params.requestObj);
 
