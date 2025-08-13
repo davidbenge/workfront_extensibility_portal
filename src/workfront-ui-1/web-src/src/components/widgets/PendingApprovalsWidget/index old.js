@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import axios from "axios";
 import authTokenManager from '../../utils/authTokenManager';
-import actionWebInvoke from '../../utils/utils';
+import { WorkfrontServiceClient } from '../../utils/wfClient';
 import { attach } from "@adobe/uix-guest";
-import allActions from '../../../config.json'
 
-const fetch = require('node-fetch');
 
 
 const PendingApprovalsWidget = () => {
@@ -34,40 +33,102 @@ const PendingApprovalsWidget = () => {
   }, []);
   
   useEffect(() => {
-    if (!accessToken || !hostname) return; // Only run if accessToken and hostname is set and changed
+    if (!accessToken) return; // Only run if accessToken is set
     // You can now use accessToken here
     const fetchData = async () => {
-      const actionUrl = allActions['wep/pendingApprovalsWidget'];
-      const actionHeaders = {'Authorization': `Bearer ${accessToken}`};
-      const actionParams = {'hostname': hostname};
-      const approvalsReq = await actionWebInvoke(actionUrl, actionHeaders, actionParams);
-      const myApprovals = await approvalsReq.json();
+      const actionUrl = `https://27200-wep-stage.adobeio-static.net/api/v1/web/heineken/wfapi`
+      const axiosInstance = axios.create();
+      const myApprovals = await axiosInstance.post(actionUrl,
+        {
+            'requestObj': {
+              'hostname': hostname,
+              'method': 'get',
+              'objCode': 'APPROVAL',
+              'parameters': {
+                'query': 'myApprovals'
+              }
+            }
+        },
+        {
+          headers: {'Authorization': `Bearer ${accessToken}`}
+        }
+      );
+      const rawApprovals = myApprovals.data;
+
+      const testApprovalsReq = await axiosInstance.post(`https://27200-wep-stage.adobeio-static.net/api/v1/web/heineken/pendingApprovalsWidget`,
+        {
+          'hostname': hostname
+        },
+        {
+          headers: {'Authorization': `Bearer ${accessToken}`}
+        }
+      );
+      const testApprovals = testApprovalsReq.data;
+      console.log(testApprovals);
 
       const priorityMap = {
-        '0': 'None',
-        '1': 'Low',
-        '2': 'Normal',
-        '3': 'High',
-        '4': 'Urgent'
-      };
+          '0': 'None',
+          '1': 'Low',
+          '2': 'Normal',
+          '3': 'High',
+          '4': 'Urgent'
+        };
+
       const processedApprovals = await Promise.all(
-        myApprovals.slice(0, 3).map(async(item) => {
-          const wfDate = item.date;
+        rawApprovals.slice(0, 3).map(async(item) => {
+          const awaitingApprovals = await axiosInstance.post(actionUrl,
+            {
+              'requestObj': {
+                'hostname': hostname,
+                'method': 'get',
+                'objCode': item.objCode,
+                'ID': item.ID,
+                'parameters': {
+                  'fields': 'approvalStartDate,awaitingApprovals:*,approvalProcess:name,currentApprovalStep'
+                }
+              }
+            },
+            {
+              headers: {'Authorization': `Bearer ${accessToken}`}
+            }
+          );
+
+          const approvalSubmittedBy = await axiosInstance.post(actionUrl,
+            {
+              'requestObj': {
+                'hostname': hostname,
+                'method': 'get',
+                'objCode': 'USER',
+                'ID': awaitingApprovals.data.awaitingApprovals[0].submittedByID,
+                'parameters': {
+                  'fields': 'name'
+                }
+              }
+            },
+            {
+              headers: {'Authorization': `Bearer ${accessToken}`}
+            }
+          );
+            
+          const wfDate = awaitingApprovals.data.approvalStartDate;
           const fixedDate = wfDate.replace(/:(\d{3})-/, '.$1-');
           const date = new Date(fixedDate);
           const formattedDate = date.toISOString().slice(0, 10); // "2025-08-07"
-
           return {
-            id: item.id,
+            id: item.ID,
             objCode: item.objCode,
-            title: item.title,
+            title: item.name,
+            type: 'Debrief Approval',
             priority: priorityMap[item.priority],
+            requester: 'TBD',
             date: formattedDate,
-            approvalStepName: item.approvalStepName,
-            approvalSubmittedBy: item.approvalSubmittedBy
+            link: `https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/project/${item.ID}`,
+            approvalStepName: awaitingApprovals.data.currentApprovalStep.name,
+            approvalSubmittedBy: approvalSubmittedBy.data.name // Example link, adjust as needed
           };
+          
         })
-      );
+      )
       setApprovals(processedApprovals);
     };
     fetchData();
@@ -76,21 +137,24 @@ const PendingApprovalsWidget = () => {
 
   const handleDecision = async (objID,objCode,decision) => {
     console.log(`Decision ${decision} on approval with ID: ${objID}`);
-    const actionUrl = allActions['wep/wfapi'];
-    const actionHeaders = {'Authorization': `Bearer ${accessToken}`};
-    const actionParams = {
-      'requestObj': {
-        'hostname': hostname,
-        'method': 'put',
-        'objCode': objCode,
-        'ID': objID,
-        'parameters': {
-          'action': `${decision}Approval`
+    const actionUrl = `https://27200-wep-stage.adobeio-static.net/api/v1/web/heineken/wfapi`
+    const axiosInstance = axios.create();
+    const res = await axiosInstance.post(actionUrl,
+      {
+        'requestObj': {
+          'hostname': hostname,
+          'method': 'put',
+          'objCode': objCode,
+          'ID': objID,
+          'parameters': {
+            'action': `${decision}Approval`
+          }
         }
+      },
+      {
+        headers: {'Authorization': `Bearer ${accessToken}`}
       }
-    }
-    const res = await actionWebInvoke(actionUrl, actionHeaders, actionParams);
-
+    );
     if (res.status === 200) {
       console.log(`Successfully decisioned approval with ID: ${objID}`);
       // Optionally, you can refresh the approvals list after a decision
@@ -180,6 +244,13 @@ const PendingApprovalsWidget = () => {
           </div>
         </div>
       </div>
+
+      {/* Access Token Display 
+      <div style={{ margin: '1rem 0', padding: '0.5rem', background: '#f1f5f9', borderRadius: '4px', wordBreak: 'break-all' }}>
+        <strong>Access Token:</strong>
+        <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0}}>{accessToken}</pre>
+      </div>
+      */}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {approvals.map((approval) => (

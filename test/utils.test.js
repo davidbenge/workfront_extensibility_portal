@@ -2,7 +2,7 @@
 * <license header>
 */
 
-const utils = require('./../src/workfront-ui-1/actions/utils.js')
+const utils = require('./../actions/utils.js')
 
 test('interface', () => {
   expect(typeof utils.errorResponse).toBe('function')

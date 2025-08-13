@@ -3,6 +3,8 @@
 */
 
 /* global fetch */
+const fetch = require('node-fetch');
+
 
 /**
  *
@@ -17,6 +19,7 @@
  */
 
 async function actionWebInvoke (actionUrl, headers = {}, params = {}, options = { method: 'POST' }) {  
+  
   const actionHeaders = {
     'Content-Type': 'application/json',
     ...headers
@@ -40,8 +43,13 @@ async function actionWebInvoke (actionUrl, headers = {}, params = {}, options = 
   }
   
   const response = await fetch(actionUrl, fetchConfig)
+  
+  return response;
+
+  /*
 
   let content = await response.text()
+  console.log(content);
   
   if (!response.ok) {
     return JSON.parse(content)
@@ -52,6 +60,7 @@ async function actionWebInvoke (actionUrl, headers = {}, params = {}, options = 
     // response is not json
   }
   return content
+  */
 }
 
 export default actionWebInvoke
