@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Flex, View, Heading, Text, ActionButton, ProgressCircle } from '@adobe/react-spectrum';
+import { Flex, View, Heading, Text, ActionButton, ProgressCircle, Provider, defaultTheme } from '@adobe/react-spectrum';
 import authTokenManager from '../../utils/authTokenManager';
 import actionWebInvoke from '../../utils/utils';
 import { attach } from "@adobe/uix-guest";
@@ -189,48 +189,57 @@ const PendingApprovalsWidget = () => {
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px black solid', height: 'size-600' }}>
-          <Flex justifyContent="center" alignItems="center" height="size-600">
-            <ProgressCircle aria-label="Loading campaigns..." isIndeterminate />
-          </Flex>
-        </div>
+
+        <Provider theme={defaultTheme}> 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <Flex justifyContent="center" alignItems="center" height="size-600">
+              <ProgressCircle aria-label="Loading campaigns..." isIndeterminate />
+            </Flex>
+          </div>
+        </Provider>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'center' }}>
+          
             {approvals.length == 0 ? (
-              <h4>No Approvals Assigned</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'center' }}>
+                <h4>No Approvals Assigned</h4>
+              </div>
             ) : (
               approvals.map((approval) => (
-                <div key={approval.id} className="approval-card">
-                  <div className="approval-header">
-                    <div>
-                      <h4 className="approval-title" style={{ cursor: 'pointer' }} onClick={() => objLink(approval.id, approval.objCode)}>{approval.title}</h4>
-                      <p className="approval-type">Approval Step: {approval.approvalStepName}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div key={approval.id} className="approval-card">
+                    <div className="approval-header">
+                      <div>
+                        <h4 className="approval-title" style={{ cursor: 'pointer' }} onClick={() => objLink(approval.id, approval.objCode)}>{approval.title}</h4>
+                        <p className="approval-type">Approval Step: {approval.approvalStepName}</p>
+                      </div>
+                      <span className={`approval-priority ${approval.priority}`}>
+                        {approval.priority}
+                      </span>
                     </div>
-                    <span className={`approval-priority ${approval.priority}`}>
-                      {approval.priority}
-                    </span>
-                  </div>
 
-                  <div className="approval-meta">
-                    <span>Requested by {approval.approvalSubmittedBy}</span>
-                    <span>{approval.date}</span>
-                  </div>
+                    <div className="approval-meta">
+                      <span>Requested by {approval.approvalSubmittedBy}</span>
+                      <span>{approval.date}</span>
+                    </div>
 
-                  <div className="approval-actions">
-                    <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'approve')}>
-                      Approve
-                    </button>
-                    <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'reject')}>
-                      Reject
-                    </button>
+                    <div className="approval-actions">
+                      <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'approve')}>
+                        Approve
+                      </button>
+                      <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'reject')}>
+                        Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
             )}
             
-          </div>
-          {approvals.length >= 1 && (
+          
+          {approvals.length == 0 ? (
+            null
+          ) : (
             <div style={{
               marginTop: '1rem',
               paddingTop: '1rem',
