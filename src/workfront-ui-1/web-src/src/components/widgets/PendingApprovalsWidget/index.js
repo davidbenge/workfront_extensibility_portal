@@ -119,7 +119,7 @@ const PendingApprovalsWidget = () => {
         break;
     }
     //window.top.location.href = `https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/${objType}/${objID}`;
-    window.open(`https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/${objType}/${objID}`, "_blank")
+    window.open(`https://${hostname}/${objType}/${objID}`, "_blank")
   }
 
   /*
@@ -205,8 +205,8 @@ const PendingApprovalsWidget = () => {
                 <h4>No Approvals Assigned</h4>
               </div>
             ) : (
-              approvals.map((approval) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {approvals.map((approval) => (
                   <div key={approval.id} className="approval-card">
                     <div className="approval-header">
                       <div>
@@ -232,8 +232,8 @@ const PendingApprovalsWidget = () => {
                       </button>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
             
           
