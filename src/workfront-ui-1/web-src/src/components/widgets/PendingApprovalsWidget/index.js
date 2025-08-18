@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Flex, View, Heading, Text, ActionButton, ProgressCircle } from '@adobe/react-spectrum';
 import authTokenManager from '../../utils/authTokenManager';
 import actionWebInvoke from '../../utils/utils';
 import { attach } from "@adobe/uix-guest";
@@ -11,6 +12,7 @@ const PendingApprovalsWidget = () => {
   const [accessToken, setAccessToken] = useState('');
   const [hostname, sethostname] = useState('');
   const [approvals, setApprovals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const doAttach = async () => {
       try {
@@ -22,7 +24,7 @@ const PendingApprovalsWidget = () => {
           setAccessToken(imsToken);
         }
         const hostname = conn?.sharedContext?.get("hostname");
-        if(hostname) {
+        if (hostname) {
           sethostname(hostname);
         }
 
@@ -32,14 +34,15 @@ const PendingApprovalsWidget = () => {
     };
     doAttach();
   }, []);
-  
+
   useEffect(() => {
     if (!accessToken || !hostname) return; // Only run if accessToken and hostname is set and changed
     // You can now use accessToken here
     const fetchData = async () => {
       const actionUrl = allActions['wep/pendingApprovalsWidget'];
-      const actionHeaders = {'Authorization': `Bearer ${accessToken}`};
-      const actionParams = {'hostname': hostname};
+      //const actionUrl = 'https://hook.fusion.adobe.com/yjhutjmxck6vlxq6nrp3dm0y5nr9gryi';
+      const actionHeaders = { 'Authorization': `Bearer ${accessToken}` };
+      const actionParams = { 'hostname': hostname };
       const approvalsReq = await actionWebInvoke(actionUrl, actionHeaders, actionParams);
       const myApprovals = await approvalsReq.json();
 
@@ -51,7 +54,10 @@ const PendingApprovalsWidget = () => {
         '4': 'Urgent'
       };
       const processedApprovals = await Promise.all(
-        myApprovals.slice(0, 3).map(async(item) => {
+        myApprovals.slice(0, 3).map(async (item) => {
+          if (actionUrl.includes('fusion')) {
+            item = JSON.parse(item);
+          }
           const wfDate = item.date;
           const fixedDate = wfDate.replace(/:(\d{3})-/, '.$1-');
           const date = new Date(fixedDate);
@@ -69,15 +75,16 @@ const PendingApprovalsWidget = () => {
         })
       );
       setApprovals(processedApprovals);
+      setIsLoading(false);
     };
     fetchData();
   }, [accessToken, hostname]);
   //console.log(`My IMS Token: ${accessToken}`);
 
-  const handleDecision = async (objID,objCode,decision) => {
+  const handleDecision = async (objID, objCode, decision) => {
     console.log(`Decision ${decision} on approval with ID: ${objID}`);
     const actionUrl = allActions['wep/wfapi'];
-    const actionHeaders = {'Authorization': `Bearer ${accessToken}`};
+    const actionHeaders = { 'Authorization': `Bearer ${accessToken}` };
     const actionParams = {
       'requestObj': {
         'hostname': hostname,
@@ -99,7 +106,7 @@ const PendingApprovalsWidget = () => {
   }
 
   let objType;
-  const objLink = async (objID,objCode) => {
+  const objLink = async (objID, objCode) => {
     switch (objCode) {
       case 'PROJ':
         objType = 'project';
@@ -112,9 +119,9 @@ const PendingApprovalsWidget = () => {
         break;
     }
     //window.top.location.href = `https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/${objType}/${objID}`;
-    window.open(`https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/${objType}/${objID}`, "_blank") 
+    window.open(`https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/${objType}/${objID}`, "_blank")
   }
-  
+
   /*
   const approvals = [
     {
@@ -157,16 +164,16 @@ const PendingApprovalsWidget = () => {
       <div className="widget-header">
         <div>
           <h3 className="widget-title">Pending Approvals</h3>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             gap: '0.5rem',
             marginTop: '0.25rem'
           }}>
-            <div style={{ 
-              width: '20px', 
-              height: '20px', 
-              borderRadius: '50%', 
+            <div style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
               background: '#64748b',
               display: 'flex',
               alignItems: 'center',
@@ -181,54 +188,75 @@ const PendingApprovalsWidget = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {approvals.map((approval) => (
-          <div key={approval.id} className="approval-card">
-            <div className="approval-header">
-              <div>
-                <h4 className="approval-title" style={{cursor: 'pointer'}} onClick={() => objLink(approval.id, approval.objCode)}>{approval.title}</h4>
-                <p className="approval-type">Approval Step: {approval.approvalStepName}</p>
-              </div>
-              <span className={`approval-priority ${approval.priority}`}>
-                {approval.priority}
-              </span>
-            </div>
-            
-            <div className="approval-meta">
-              <span>Requested by {approval.approvalSubmittedBy}</span>
-              <span>{approval.date}</span>
-            </div>
-            
-            <div className="approval-actions">
-              <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'approve')}>
-                Approve
-              </button>
-              <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'reject')}>
-                Reject
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {isLoading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px black solid', height: 'size-600' }}>
+          <Flex justifyContent="center" alignItems="center" height="size-600">
+            <ProgressCircle aria-label="Loading campaigns..." isIndeterminate />
+          </Flex>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'center' }}>
+            {approvals.length == 0 ? (
+              <h4>No Approvals Assigned</h4>
+            ) : (
+              approvals.map((approval) => (
+                <div key={approval.id} className="approval-card">
+                  <div className="approval-header">
+                    <div>
+                      <h4 className="approval-title" style={{ cursor: 'pointer' }} onClick={() => objLink(approval.id, approval.objCode)}>{approval.title}</h4>
+                      <p className="approval-type">Approval Step: {approval.approvalStepName}</p>
+                    </div>
+                    <span className={`approval-priority ${approval.priority}`}>
+                      {approval.priority}
+                    </span>
+                  </div>
 
-      <div style={{ 
-        marginTop: '1rem', 
-        paddingTop: '1rem', 
-        borderTop: '1px solid #f1f5f9',
-        textAlign: 'center'
-      }}>
-        <a href="#" style={{ 
-          color: '#3b82f6', 
-          textDecoration: 'none', 
-          fontSize: '0.875rem',
-          fontWeight: '500'
-        }}>
-          View All Approvals
-        </a>
-      </div>
+                  <div className="approval-meta">
+                    <span>Requested by {approval.approvalSubmittedBy}</span>
+                    <span>{approval.date}</span>
+                  </div>
+
+                  <div className="approval-actions">
+                    <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'approve')}>
+                      Approve
+                    </button>
+                    <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.5rem 1rem' }} onClick={() => handleDecision(approval.id, approval.objCode, 'reject')}>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+            
+          </div>
+          {approvals.length >= 1 && (
+            <div style={{
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #f1f5f9',
+              textAlign: 'center'
+            }}>
+              <a href="#" style={{
+                color: '#3b82f6',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                View All Approvals
+              </a>
+            </div>
+          )}
+          
+          
+        </>
+      )}
+
+
+
     </div>
   );
-  
+
 };
 
 export default PendingApprovalsWidget; 

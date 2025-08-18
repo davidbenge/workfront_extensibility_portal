@@ -6,7 +6,7 @@
     "@adobe/aio-sdk": "^6",
     "@adobe/exc-app": "^0.2.21",
     "@adobe/generator-add-action-generic": "^2.0.0",
-    "@adobe/react-spectrum": "^3.34.0",
+    "@adobe/react-spectrum": "^3.43.0",
     "@adobe/uix-guest": "^0.10.0",
     "@adobe/workfront-ui-ext-tpl": "^0.0.7",
     "@react-spectrum/list": "^3.0.0-rc.0",
