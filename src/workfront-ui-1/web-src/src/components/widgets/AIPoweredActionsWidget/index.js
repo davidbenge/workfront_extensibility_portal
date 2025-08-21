@@ -13,7 +13,7 @@ const AIPoweredActionsWidget = () => {
       icon: '➕',
       title: 'New Campaign',
       description: 'Launch campaign',
-      target: 'https://experience.adobe.com/#/@bilbroug/so:bilbroug-Production/workfront/intake/6881659013dde2ca3c6db8f8/request'
+      target: 'https://experience.adobe.com/#/@heinekeninternationalbv/so:theheinekencompany-Production/workfront/intake/68a721b3c38066ca2acd8f1d/request'
     },
     {
       id: 3,

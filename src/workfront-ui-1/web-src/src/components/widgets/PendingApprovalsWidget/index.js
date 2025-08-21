@@ -59,7 +59,7 @@ const PendingApprovalsWidget = () => {
             item = JSON.parse(item);
           }
           const wfDate = item.date;
-          const fixedDate = wfDate.replace(/:(\d{3})-/, '.$1-');
+          const fixedDate = wfDate.replace(/:(?!.*:)/, '.');
           const date = new Date(fixedDate);
           const formattedDate = date.toISOString().slice(0, 10); // "2025-08-07"
 
@@ -236,7 +236,7 @@ const PendingApprovalsWidget = () => {
               </div>
             )}
             
-          
+          {/*
           {approvals.length == 0 ? (
             null
           ) : (
@@ -256,6 +256,7 @@ const PendingApprovalsWidget = () => {
               </a>
             </div>
           )}
+          */}
           
           
         </>
